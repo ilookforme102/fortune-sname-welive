@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortune-snake-welive
+  labels:
+    app: fortune-snake-welive
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fortune-snake-welive
+  template:
+    metadata:
+      labels:
+        app: fortune-snake-welive
+    spec:
+      containers:
+        - name: fortune-snake-welive
+          image: your-docker-registry/fortune-snake-welive:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: API_SYS_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fortune-secrets
+                  key: API_SYS_BASE_URL
+            - name: API_SYS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: fortune-secrets
+                  key: API_SYS_TOKEN
+            - name: GAME_URL
+              value: "http://fortune-snake-welive.default.svc.cluster.local"
+            - name: GAME_SERVICE_KEY
+              value: "fortune-snake"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fortune-snake-welive
+spec:
+  selector:
+    app: fortune-snake-welive
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
